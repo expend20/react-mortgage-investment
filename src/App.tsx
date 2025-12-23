@@ -188,6 +188,7 @@ function App() {
             investmentInputs={investmentInputs}
             onMortgageChange={setMortgageInputs}
             onInvestmentChange={setInvestmentInputs}
+            calculatedMonthlyContribution={results.initialMonthlyContribution}
           />
 
           <SummaryCards results={results} />

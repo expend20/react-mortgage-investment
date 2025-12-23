@@ -6,6 +6,7 @@ interface InputPanelProps {
   investmentInputs: InvestmentInputs;
   onMortgageChange: (inputs: MortgageInputs) => void;
   onInvestmentChange: (inputs: InvestmentInputs) => void;
+  calculatedMonthlyContribution: number;
 }
 
 interface InputFieldProps {
@@ -395,6 +396,7 @@ export function InputPanel({
   investmentInputs,
   onMortgageChange,
   onInvestmentChange,
+  calculatedMonthlyContribution,
 }: InputPanelProps) {
   const { homePrice } = mortgageInputs;
 
@@ -549,7 +551,19 @@ export function InputPanel({
             <input
               type="checkbox"
               checked={investmentInputs.useManualContribution}
-              onChange={(e) => updateInvestment('useManualContribution', e.target.checked)}
+              onChange={(e) => {
+                const checked = e.target.checked;
+                if (checked) {
+                  // When enabling manual mode, set to current calculated value (min 0)
+                  onInvestmentChange({
+                    ...investmentInputs,
+                    useManualContribution: true,
+                    manualMonthlyContribution: Math.max(0, Math.round(calculatedMonthlyContribution)),
+                  });
+                } else {
+                  updateInvestment('useManualContribution', false);
+                }
+              }}
               className="w-4 h-4 text-green-600 rounded focus:ring-green-500"
             />
             <span className="text-sm font-medium text-gray-700">

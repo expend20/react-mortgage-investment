@@ -183,13 +183,24 @@ export function SummaryCards({ results }: SummaryCardsProps) {
           <div className="mt-3 pt-3 border-t">
             <div className="flex justify-between">
               <span className="font-medium">Monthly to Investments</span>
-              <span className={`font-bold ${initialMonthlyContribution >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                {formatCurrency(initialMonthlyContribution)}
+              <span className={`font-bold ${initialMonthlyContribution >= 0 ? 'text-green-600' : 'text-gray-500'}`}>
+                {formatCurrency(Math.max(0, initialMonthlyContribution))}
               </span>
             </div>
-            <p className="text-xs text-gray-500 mt-2">
-              Renter invests the difference each month. At end, buys home for {formatCurrency(finalHomeValue)}.
-            </p>
+            {initialMonthlyContribution >= 0 ? (
+              <p className="text-xs text-gray-500 mt-2">
+                Renter invests the difference each month. At end, buys home for {formatCurrency(finalHomeValue)}.
+              </p>
+            ) : (
+              <div className="mt-2 p-2 bg-amber-50 rounded text-xs">
+                <p className="text-amber-800 font-medium">
+                  Renting costs {formatCurrency(Math.abs(initialMonthlyContribution))}/mo more than buying.
+                </p>
+                <p className="text-amber-700 mt-1">
+                  No monthly contributions added. Investor grows only the initial portfolio.
+                </p>
+              </div>
+            )}
           </div>
         </div>
       </div>
