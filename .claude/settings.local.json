@@ -4,7 +4,10 @@
       "Bash(npm install:*)",
       "Bash(npm run dev:*)",
       "Bash(findstr:*)",
-      "Bash(npx tsc:*)"
+      "Bash(npx tsc:*)",
+      "Bash(vercel --version:*)",
+      "Bash(npm run build:*)",
+      "Bash(vercel:*)"
     ]
   }
 }

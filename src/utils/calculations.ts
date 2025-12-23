@@ -39,18 +39,57 @@ export function calculateRemainingBalance(
   );
 }
 
+// Helper functions to convert units to standard values
+function getDownPaymentDollars(homePrice: number, value: number, unit: MortgageInputs['downPaymentUnit']): number {
+  if (unit === 'percent') {
+    return homePrice * (value / 100);
+  }
+  return value;
+}
+
+function getYearlyPropertyTax(homePrice: number, value: number, unit: MortgageInputs['propertyTaxUnit']): number {
+  if (unit === 'percent') {
+    return homePrice * (value / 100);
+  }
+  return value;
+}
+
+function getMonthlyMaintenance(homePrice: number, value: number, unit: MortgageInputs['maintenanceUnit']): number {
+  if (unit === 'percent') {
+    return (homePrice * (value / 100)) / 12;
+  }
+  if (unit === 'dollarYearly') {
+    return value / 12;
+  }
+  return value;
+}
+
+function getYearlyOtherCosts(homePrice: number, value: number, unit: MortgageInputs['otherCostsUnit']): number {
+  if (unit === 'percent') {
+    return homePrice * (value / 100);
+  }
+  if (unit === 'dollarMonthly') {
+    return value * 12;
+  }
+  return value;
+}
+
 export function calculateResults(
   mortgageInputs: MortgageInputs,
   investmentInputs: InvestmentInputs
 ): CalculationResults {
   const {
     homePrice,
-    downPaymentPercent,
+    downPayment: downPaymentValue,
+    downPaymentUnit,
     mortgageTermYears,
     interestRate,
-    yearlyPropertyTax,
-    monthlyMaintenance,
-    otherCostsPercent,
+    propertyTax,
+    propertyTaxUnit,
+    maintenance,
+    maintenanceUnit,
+    otherCosts,
+    otherCostsUnit,
     buyingCosts,
   } = mortgageInputs;
 
@@ -62,9 +101,14 @@ export function calculateResults(
     manualMonthlyContribution,
   } = investmentInputs;
 
-  // Calculate initial values
-  const downPayment = homePrice * (downPaymentPercent / 100);
+  // Calculate initial values with unit conversions
+  const downPayment = getDownPaymentDollars(homePrice, downPaymentValue, downPaymentUnit);
   const loanAmount = homePrice - downPayment;
+
+  // Convert all inputs to standard units
+  const yearlyPropertyTax = getYearlyPropertyTax(homePrice, propertyTax, propertyTaxUnit);
+  const monthlyMaintenance = getMonthlyMaintenance(homePrice, maintenance, maintenanceUnit);
+  const yearlyOtherCosts = getYearlyOtherCosts(homePrice, otherCosts, otherCostsUnit);
 
   // Monthly mortgage payment (P&I only)
   const monthlyMortgagePI = calculateMonthlyMortgagePayment(
@@ -73,9 +117,9 @@ export function calculateResults(
     mortgageTermYears
   );
 
-  // Monthly costs for homeowner (using fixed amounts)
+  // Monthly costs for homeowner (using converted amounts)
   const monthlyPropertyTax = yearlyPropertyTax / 12;
-  const monthlyOtherCostsAmount = homePrice * (otherCostsPercent / 100) / 12;
+  const monthlyOtherCostsAmount = yearlyOtherCosts / 12;
   const totalMonthlyMortgageCost = monthlyMortgagePI + monthlyPropertyTax + monthlyMaintenance + monthlyOtherCostsAmount;
 
   // Calculate average monthly principal and interest
@@ -109,9 +153,6 @@ export function calculateResults(
 
   // No monthly home savings - renter invests everything and buys home at end
   const monthlyHomeSavings = 0;
-
-  // Yearly other costs (as percentage of home value)
-  const yearlyOtherCosts = homePrice * (otherCostsPercent / 100);
 
   // Track cost breakdown totals
   let totalContributions = 0;
@@ -149,23 +190,24 @@ export function calculateResults(
     // Home equity
     const homeEquity = homeValue - remainingBalance;
 
-    // Calculate costs for this year (using fixed amounts)
+    // Calculate costs for this year (using converted amounts)
     const yearPropertyTax = yearlyPropertyTax;
     const yearMaintenance = monthlyMaintenance * 12;
+    const yearOtherCosts = yearlyOtherCosts;
     const yearMortgagePayments = monthlyMortgagePI * 12;
 
-    mortgageCumulativeCost += yearMortgagePayments + yearPropertyTax + yearMaintenance + yearlyOtherCosts;
+    mortgageCumulativeCost += yearMortgagePayments + yearPropertyTax + yearMaintenance + yearOtherCosts;
 
     // Track breakdown totals
     totalPropertyTaxPaid += yearPropertyTax;
     totalMaintenancePaid += yearMaintenance;
-    totalOtherCostsPaid += yearlyOtherCosts;
+    totalOtherCostsPaid += yearOtherCosts;
 
     // Investment strategy - simulate month by month for this year
     for (let month = 0; month < 12; month++) {
       // Monthly contribution = mortgage costs - rent - home savings
       // Renter pays: rent + saves toward buying home at end
-      const monthlyOtherCosts = yearlyOtherCosts / 12;
+      const monthlyOtherCosts = yearOtherCosts / 12;
       const currentTotalMortgageCost = monthlyMortgagePI +
         monthlyPropertyTax +
         monthlyMaintenance +

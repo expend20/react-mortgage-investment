@@ -1,11 +1,20 @@
+export type DownPaymentUnit = 'percent' | 'dollar';
+export type TaxUnit = 'dollarYearly' | 'percent';
+export type MaintenanceUnit = 'dollarMonthly' | 'dollarYearly' | 'percent';
+export type OtherCostsUnit = 'percent' | 'dollarMonthly' | 'dollarYearly';
+
 export interface MortgageInputs {
   homePrice: number;
-  downPaymentPercent: number;
+  downPayment: number;
+  downPaymentUnit: DownPaymentUnit;
   mortgageTermYears: number;
   interestRate: number;
-  yearlyPropertyTax: number;
-  monthlyMaintenance: number;
-  otherCostsPercent: number;
+  propertyTax: number;
+  propertyTaxUnit: TaxUnit;
+  maintenance: number;
+  maintenanceUnit: MaintenanceUnit;
+  otherCosts: number;
+  otherCostsUnit: OtherCostsUnit;
   buyingCosts: number;
 }
 

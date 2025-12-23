@@ -8,12 +8,16 @@ import { YearlyBreakdown } from './components/YearlyBreakdown';
 
 const defaultMortgageInputs: MortgageInputs = {
   homePrice: 400000,
-  downPaymentPercent: 50,
+  downPayment: 50,
+  downPaymentUnit: 'percent',
   mortgageTermYears: 10,
   interestRate: 4,
-  yearlyPropertyTax: 2800,
-  monthlyMaintenance: 500,
-  otherCostsPercent: 0.7,
+  propertyTax: 2800,
+  propertyTaxUnit: 'dollarYearly',
+  maintenance: 500,
+  maintenanceUnit: 'dollarMonthly',
+  otherCosts: 0.7,
+  otherCostsUnit: 'percent',
   buyingCosts: 2000,
 };
 
@@ -28,12 +32,16 @@ const defaultInvestmentInputs: InvestmentInputs = {
 // Short keys for URL encoding
 const KEY_MAP = {
   homePrice: 'p',
-  downPaymentPercent: 'd',
+  downPayment: 'd',
+  downPaymentUnit: 'du',
   mortgageTermYears: 't',
   interestRate: 'r',
-  yearlyPropertyTax: 'x',
-  monthlyMaintenance: 'm',
-  otherCostsPercent: 'o',
+  propertyTax: 'x',
+  propertyTaxUnit: 'xu',
+  maintenance: 'm',
+  maintenanceUnit: 'mu',
+  otherCosts: 'o',
+  otherCostsUnit: 'ou',
   buyingCosts: 'b',
   monthlyRent: 'n',
   rentIncreaseRate: 'i',
@@ -45,6 +53,9 @@ const KEY_MAP = {
 const REVERSE_KEY_MAP = Object.fromEntries(
   Object.entries(KEY_MAP).map(([k, v]) => [v, k])
 ) as Record<string, string>;
+
+const STRING_FIELDS = ['downPaymentUnit', 'propertyTaxUnit', 'maintenanceUnit', 'otherCostsUnit'];
+const BOOLEAN_FIELDS = ['useManualContribution'];
 
 function parseInputsFromURL(): { mortgage: MortgageInputs; investment: InvestmentInputs } | null {
   const params = new URLSearchParams(window.location.search);
@@ -59,9 +70,13 @@ function parseInputsFromURL(): { mortgage: MortgageInputs; investment: Investmen
       if (!fullKey) continue;
 
       if (fullKey in defaultMortgageInputs) {
-        (mortgage as unknown as Record<string, number>)[fullKey] = parseFloat(value);
+        if (STRING_FIELDS.includes(fullKey)) {
+          (mortgage as unknown as Record<string, string>)[fullKey] = value;
+        } else {
+          (mortgage as unknown as Record<string, number>)[fullKey] = parseFloat(value);
+        }
       } else if (fullKey in defaultInvestmentInputs) {
-        if (fullKey === 'useManualContribution') {
+        if (BOOLEAN_FIELDS.includes(fullKey)) {
           (investment as unknown as Record<string, boolean>)[fullKey] = value === '1';
         } else {
           (investment as unknown as Record<string, number>)[fullKey] = parseFloat(value);
@@ -87,7 +102,13 @@ function encodeInputsToURL(mortgage: MortgageInputs, investment: InvestmentInput
     } else if (key in investment) {
       const val = investment[key as keyof InvestmentInputs];
       const def = defaultInvestmentInputs[key as keyof InvestmentInputs];
-      if (val !== def) params.set(shortKey, key === 'useManualContribution' ? (val ? '1' : '0') : String(val));
+      if (val !== def) {
+        if (BOOLEAN_FIELDS.includes(key)) {
+          params.set(shortKey, val ? '1' : '0');
+        } else {
+          params.set(shortKey, String(val));
+        }
+      }
     }
   }
 
@@ -118,8 +139,11 @@ function App() {
   }, [mortgageInputs, investmentInputs]);
 
   useEffect(() => {
-    const url = encodeInputsToURL(mortgageInputs, investmentInputs);
-    window.history.replaceState(null, '', url);
+    const timeoutId = setTimeout(() => {
+      const url = encodeInputsToURL(mortgageInputs, investmentInputs);
+      window.history.replaceState(null, '', url);
+    }, 300);
+    return () => clearTimeout(timeoutId);
   }, [mortgageInputs, investmentInputs]);
 
   const results = useCalculations(mortgageInputs, investmentInputs);
