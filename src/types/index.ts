@@ -22,6 +22,7 @@ export interface InvestmentInputs {
   monthlyRent: number;
   rentIncreaseRate: number;
   investmentReturnRate: number;
+  incomeTaxRate: number;
   useManualContribution: boolean;
   manualMonthlyContribution: number;
 }

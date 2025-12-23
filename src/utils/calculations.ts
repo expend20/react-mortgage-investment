@@ -97,6 +97,7 @@ export function calculateResults(
     monthlyRent,
     rentIncreaseRate,
     investmentReturnRate,
+    incomeTaxRate,
     useManualContribution,
     manualMonthlyContribution,
   } = investmentInputs;
@@ -145,8 +146,9 @@ export function calculateResults(
   let investmentValue = downPayment;
   let currentMonthlyRent = monthlyRent;
 
-  // Monthly investment return rate
-  const monthlyInvestmentReturn = Math.pow(1 + investmentReturnRate / 100, 1/12) - 1;
+  // Monthly investment return rate (after tax on gains)
+  const afterTaxReturnRate = investmentReturnRate * (1 - incomeTaxRate / 100);
+  const monthlyInvestmentReturn = Math.pow(1 + afterTaxReturnRate / 100, 1/12) - 1;
 
   // Home value stays constant (no appreciation)
   const finalHomeValue = homePrice;

@@ -46,7 +46,8 @@ function useInputHandlers(
   onChange: (value: number) => void,
   step: number,
   min?: number,
-  max?: number
+  max?: number,
+  setDisplayValue?: (value: string) => void
 ) {
   const inputRef = React.useRef<HTMLInputElement>(null);
 
@@ -55,14 +56,16 @@ function useInputHandlers(
     let newValue = Math.round((value + step) * Math.pow(10, decimals)) / Math.pow(10, decimals);
     if (max !== undefined) newValue = Math.min(max, newValue);
     onChange(newValue);
-  }, [value, onChange, step, max]);
+    setDisplayValue?.(String(newValue));
+  }, [value, onChange, step, max, setDisplayValue]);
 
   const decrement = React.useCallback(() => {
     const decimals = (step.toString().split('.')[1] || '').length;
     let newValue = Math.round((value - step) * Math.pow(10, decimals)) / Math.pow(10, decimals);
     if (min !== undefined) newValue = Math.max(min, newValue);
     onChange(newValue);
-  }, [value, onChange, step, min]);
+    setDisplayValue?.(String(newValue));
+  }, [value, onChange, step, min, setDisplayValue]);
 
   // Scroll wheel support for desktop
   React.useEffect(() => {
@@ -78,12 +81,13 @@ function useInputHandlers(
         if (min !== undefined) newValue = Math.max(min, newValue);
         if (max !== undefined) newValue = Math.min(max, newValue);
         onChange(newValue);
+        setDisplayValue?.(String(newValue));
       }
     };
 
     el.addEventListener('wheel', handleWheel, { passive: false });
     return () => el.removeEventListener('wheel', handleWheel);
-  }, [value, onChange, step, min, max]);
+  }, [value, onChange, step, min, max, setDisplayValue]);
 
   return { inputRef, increment, decrement };
 }
@@ -105,9 +109,9 @@ function Tooltip({ text }: { text: string }) {
 }
 
 function InputField({ label, value, onChange, prefix, suffix, step = 1, min, max, tooltip }: InputFieldProps) {
-  const { inputRef, increment, decrement } = useInputHandlers(value, onChange, step, min, max);
   const [displayValue, setDisplayValue] = React.useState(String(value));
   const [isFocused, setIsFocused] = React.useState(false);
+  const { inputRef, increment, decrement } = useInputHandlers(value, onChange, step, min, max, setDisplayValue);
 
   // Sync display value when external value changes (but not while focused/editing)
   React.useEffect(() => {
@@ -187,15 +191,16 @@ function InputFieldWithUnit<T extends string>({
   convertValue,
 }: InputFieldWithUnitProps<T>) {
   const currentUnit = units.find(u => u.value === unit) || units[0];
+  const [displayValue, setDisplayValue] = React.useState(String(value));
+  const [isFocused, setIsFocused] = React.useState(false);
   const { inputRef, increment, decrement } = useInputHandlers(
     value,
     onChange,
     currentUnit.step,
     currentUnit.min,
-    currentUnit.max
+    currentUnit.max,
+    setDisplayValue
   );
-  const [displayValue, setDisplayValue] = React.useState(String(value));
-  const [isFocused, setIsFocused] = React.useState(false);
 
   // Sync display value when external value changes (but not while focused/editing)
   React.useEffect(() => {
@@ -526,6 +531,17 @@ export function InputPanel({
           onChange={(v) => updateInvestment('investmentReturnRate', v)}
           suffix="%/yr"
           step={0.5}
+        />
+
+        <InputField
+          label="Income Tax on Gains"
+          value={investmentInputs.incomeTaxRate}
+          onChange={(v) => updateInvestment('incomeTaxRate', v)}
+          suffix="%"
+          step={5}
+          min={0}
+          max={100}
+          tooltip="Tax rate on investment gains (e.g., capital gains tax). Reduces effective returns."
         />
 
         <div className="mt-4 mb-3">

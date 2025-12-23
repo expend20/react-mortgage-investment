@@ -25,6 +25,7 @@ const defaultInvestmentInputs: InvestmentInputs = {
   monthlyRent: 2300,
   rentIncreaseRate: 2.1,
   investmentReturnRate: 11,
+  incomeTaxRate: 15,
   useManualContribution: false,
   manualMonthlyContribution: 500,
 };
@@ -46,6 +47,7 @@ const KEY_MAP = {
   monthlyRent: 'n',
   rentIncreaseRate: 'i',
   investmentReturnRate: 'v',
+  incomeTaxRate: 'it',
   useManualContribution: 'u',
   manualMonthlyContribution: 'c',
 } as const;
